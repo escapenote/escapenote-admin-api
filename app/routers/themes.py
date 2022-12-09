@@ -19,6 +19,7 @@ router = APIRouter(
 
 @router.get("", response_model=ThemeListRes)
 async def get_themes(
+    cafeId: Optional[str] = None,
     term: Optional[str] = None,
     status: Optional[str] = None,
     skip: Optional[int] = 0,
@@ -30,6 +31,8 @@ async def get_themes(
     테마 리스트
     """
     where = dict()
+    if cafeId:
+        where["cafeId"] = cafeId
     if term:
         where["name"] = {"contains": term}
     if status:
@@ -39,6 +42,7 @@ async def get_themes(
         "skip": skip,
         "take": take,
         "where": where,
+        "include": {"cafe": True},
         "order": {sort: order},
     }
 
@@ -67,10 +71,13 @@ async def create_theme(body: CreateThemeDto):
             "name": body.name,
             "intro": body.intro,
             "thumbnail": body.thumbnail,
+            "genre": body.genre,
+            "price": body.price,
             "during": body.during,
             "minPerson": body.minPerson,
             "maxPerson": body.maxPerson,
             "level": body.level,
+            "lockingRatio": body.lockingRatio,
             "detailUrl": body.detailUrl,
             "reservationUrl": body.reservationUrl,
             "status": "PUBLISHED",
@@ -91,10 +98,13 @@ async def update_theme(id: str, body: UpdateThemeDto):
             "name": body.name,
             "intro": body.intro,
             "thumbnail": body.thumbnail,
+            "genre": body.genre,
+            "price": body.price,
             "during": body.during,
             "minPerson": body.minPerson,
             "maxPerson": body.maxPerson,
             "level": body.level,
+            "lockingRatio": body.lockingRatio,
             "detailUrl": body.detailUrl,
             "reservationUrl": body.reservationUrl,
             "status": "PUBLISHED",

@@ -13,7 +13,10 @@ class CafeListRes(BaseModel):
 
 
 class CafeDetailRes(BaseModel):
-    __root__: Cafe
+    class _Cafe(Cafe, warn_subclass=False):
+        themesCount: int
+
+    __root__: _Cafe
 
 
 class CreateCafeDto(BaseModel):
@@ -28,6 +31,7 @@ class CreateCafeDto(BaseModel):
     tel: Optional[str] = Field("")
     openingHour: Optional[int] = Field(0)
     closingHour: Optional[int] = Field(0)
+    since: Optional[str] = Field("")
 
 
 class UpdateCafeDto(BaseModel):
@@ -42,4 +46,5 @@ class UpdateCafeDto(BaseModel):
     tel: Optional[str] = Field("")
     openingHour: Optional[int] = Field(0)
     closingHour: Optional[int] = Field(0)
+    since: Optional[str] = Field("")
     status: str
