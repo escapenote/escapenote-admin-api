@@ -70,7 +70,6 @@ async def create_cafe(body: CreateCafeDto):
             "tel": body.tel,
             "openingHour": body.openingHour,
             "closingHour": body.closingHour,
-            "since": body.since,
             "status": "PUBLISHED",
         }
     )
@@ -96,7 +95,6 @@ async def update_cafe(id: str, body: UpdateCafeDto):
             "tel": body.tel,
             "openingHour": body.openingHour,
             "closingHour": body.closingHour,
-            "since": body.since,
             "status": body.status,
         },
     )

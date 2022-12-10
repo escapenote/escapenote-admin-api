@@ -27,7 +27,6 @@ model Cafe {
   tel         String     @default("")
   openingHour Int        @default(0)
   closingHour Int        @default(0)
-  since       String     @default("")
   themes      Theme[]
   status      StatusType
   createdAt   DateTime   @default(now())
@@ -52,6 +51,7 @@ model Theme {
   level          Float      @default(0.0)
   detailUrl      String     @default("")
   reservationUrl String     @default("")
+  openDate       String     @default("")
   status         StatusType
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt

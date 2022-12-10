@@ -31,7 +31,6 @@ class CreateCafeDto(BaseModel):
     tel: Optional[str] = Field("")
     openingHour: Optional[int] = Field(0)
     closingHour: Optional[int] = Field(0)
-    since: Optional[str] = Field("")
 
 
 class UpdateCafeDto(BaseModel):
@@ -46,5 +45,4 @@ class UpdateCafeDto(BaseModel):
     tel: Optional[str] = Field("")
     openingHour: Optional[int] = Field(0)
     closingHour: Optional[int] = Field(0)
-    since: Optional[str] = Field("")
     status: str
