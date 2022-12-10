@@ -78,6 +78,7 @@ async def create_theme(body: CreateThemeDto):
             "maxPerson": body.maxPerson,
             "level": body.level,
             "lockingRatio": body.lockingRatio,
+            "openDate": body.openDate,
             "detailUrl": body.detailUrl,
             "reservationUrl": body.reservationUrl,
             "status": "PUBLISHED",
@@ -105,9 +106,9 @@ async def update_theme(id: str, body: UpdateThemeDto):
             "maxPerson": body.maxPerson,
             "level": body.level,
             "lockingRatio": body.lockingRatio,
+            "openDate": body.openDate,
             "detailUrl": body.detailUrl,
             "reservationUrl": body.reservationUrl,
-            "status": "PUBLISHED",
             "status": body.status,
         },
     )

@@ -30,6 +30,7 @@ class CreateThemeDto(BaseModel):
     maxPerson: Optional[int] = Field(0)
     level: Optional[float] = Field(0.0)
     lockingRatio: Optional[int] = Field(0)
+    openDate: Optional[str] = Field("")
     detailUrl: Optional[str] = Field("")
     reservationUrl: Optional[str] = Field("")
 
@@ -46,6 +47,7 @@ class UpdateThemeDto(BaseModel):
     maxPerson: Optional[int] = Field(0)
     level: Optional[float] = Field(0.0)
     lockingRatio: Optional[int] = Field(0)
+    openDate: Optional[str] = Field("")
     detailUrl: Optional[str] = Field("")
     reservationUrl: Optional[str] = Field("")
     status: str
