@@ -110,3 +110,7 @@ async def delete_cafe(id: str):
         where={"id": id},
         data={"status": "DELETED"},
     )
+    await prisma.theme.update_many(
+        where={"cafeId": id},
+        data={"status": "DELETED"},
+    )
