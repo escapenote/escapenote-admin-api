@@ -10,3 +10,5 @@ venv/
 # Enviroments
 .env
 .env.local
+
+__pycache__
