@@ -43,12 +43,10 @@ async def get_cafes(
 
 @router.get("/{id}", response_model=CafeDetailRes)
 async def get_cafe(id: str):
-    cafe = await prisma.cafe.find_unique(where={"id": id})
-    count = await prisma.theme.count(where={"cafeId": id})
-
-    cafe = cafe.dict()
-    cafe["themesCount"] = count
-
+    cafe = await prisma.cafe.find_unique(
+        where={"id": id},
+        include={"themes": True},
+    )
     return cafe
 
 
@@ -68,8 +66,7 @@ async def create_cafe(body: CreateCafeDto):
             "images": json.dumps(body.images),
             "website": body.website,
             "tel": body.tel,
-            "openingHour": body.openingHour,
-            "closingHour": body.closingHour,
+            "openingHours": body.openingHours,
             "status": "PUBLISHED",
         }
     )
@@ -93,8 +90,7 @@ async def update_cafe(id: str, body: UpdateCafeDto):
             "images": json.dumps(body.images),
             "website": body.website,
             "tel": body.tel,
-            "openingHour": body.openingHour,
-            "closingHour": body.closingHour,
+            "openingHours": body.openingHours,
             "status": body.status,
         },
     )

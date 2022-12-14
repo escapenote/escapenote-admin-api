@@ -4,7 +4,14 @@ from prisma import models
 
 
 class Cafe(models.Cafe, warn_subclass=False):
-    images: List[str]
+    images: Optional[List[str]]
+    openingHours: Optional[List["OpeningHours"]]
+
+
+class OpeningHours(BaseModel):
+    day: str
+    openTime: str
+    closeTime: str
 
 
 class CafeListRes(BaseModel):
@@ -13,10 +20,7 @@ class CafeListRes(BaseModel):
 
 
 class CafeDetailRes(BaseModel):
-    class _Cafe(Cafe, warn_subclass=False):
-        themesCount: int
-
-    __root__: _Cafe
+    __root__: Cafe
 
 
 class CreateCafeDto(BaseModel):
@@ -26,10 +30,10 @@ class CreateCafeDto(BaseModel):
     addressLine: Optional[str] = Field("")
     lat: Optional[float] = Field(0.0)
     lng: Optional[float] = Field(0.0)
-    images: Optional[Any] = Field("[]")
+    images: Optional[Any] = Field([])
     website: Optional[str] = Field("")
     tel: Optional[str] = Field("")
-    openingHour: Optional[int] = Field(0)
+    openingHours: Optional[Any] = Field("[]")
     closingHour: Optional[int] = Field(0)
 
 
@@ -40,9 +44,12 @@ class UpdateCafeDto(BaseModel):
     addressLine: Optional[str] = Field("")
     lat: Optional[float] = Field(0.0)
     lng: Optional[float] = Field(0.0)
-    images: Optional[Any] = Field("[]")
+    images: Optional[Any] = Field([])
     website: Optional[str] = Field("")
     tel: Optional[str] = Field("")
-    openingHour: Optional[int] = Field(0)
-    closingHour: Optional[int] = Field(0)
+    openingHours: Optional[Any] = Field("[]")
     status: str
+
+
+# For circular dependency
+Cafe.update_forward_refs()

@@ -42,7 +42,10 @@ async def get_themes(
         "skip": skip,
         "take": take,
         "where": where,
-        "include": {"cafe": True},
+        "include": {
+            "cafe": True,
+            "genre": True,
+        },
         "order": {sort: order},
     }
 
@@ -56,7 +59,10 @@ async def get_theme(id: str):
     """
     테마 상세
     """
-    theme = await prisma.theme.find_unique(where={"id": id})
+    theme = await prisma.theme.find_unique(
+        where={"id": id},
+        include={"genre": True},
+    )
     return theme
 
 
@@ -71,7 +77,11 @@ async def create_theme(body: CreateThemeDto):
             "name": body.name,
             "intro": body.intro,
             "thumbnail": body.thumbnail,
-            "genre": body.genre,
+            "genre": {
+                "connect": {
+                    "id": body.genre,
+                }
+            },
             "price": body.price,
             "during": body.during,
             "minPerson": body.minPerson,
@@ -93,6 +103,12 @@ async def update_theme(id: str, body: UpdateThemeDto):
     """
     테마 수정
     """
+    genre = list(map(lambda x: {"id": x}, body.genre))
+    # 장르 초기화
+    await prisma.theme.update(
+        where={"id": id},
+        data={"genre": {"set": []}},
+    )
     theme = await prisma.theme.update(
         where={"id": id},
         data={
@@ -100,7 +116,9 @@ async def update_theme(id: str, body: UpdateThemeDto):
             "name": body.name,
             "intro": body.intro,
             "thumbnail": body.thumbnail,
-            "genre": body.genre,
+            "genre": {
+                "connect": genre,
+            },
             "price": body.price,
             "during": body.during,
             "minPerson": body.minPerson,

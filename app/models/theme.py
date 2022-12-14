@@ -2,11 +2,9 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 from prisma import models
 
-from app.models.cafe import Cafe
-
 
 class Theme(models.Theme, warn_subclass=False):
-    cafe: Optional[Cafe]
+    cafe: Optional["Cafe"]
 
 
 class ThemeListRes(BaseModel):
@@ -22,13 +20,13 @@ class CreateThemeDto(BaseModel):
     cafeId: str
     name: str
     intro: str
-    thumbnail: Optional[str] = Field("")
-    genre: Optional[str] = Field("")
-    price: Optional[int] = Field(0)
-    during: Optional[int] = Field(0)
-    minPerson: Optional[int] = Field(0)
-    maxPerson: Optional[int] = Field(0)
-    level: Optional[float] = Field(0.0)
+    thumbnail: str
+    genre: List[str]
+    price: int
+    during: int
+    minPerson: int
+    maxPerson: int
+    level: float
     lockingRatio: Optional[int] = Field(0)
     fear: Optional[int] = Field(0)
     openDate: Optional[str] = Field("")
@@ -40,16 +38,22 @@ class UpdateThemeDto(BaseModel):
     cafeId: str
     name: str
     intro: str
-    thumbnail: Optional[str] = Field("")
-    genre: Optional[str] = Field("")
-    price: Optional[int] = Field(0)
-    during: Optional[int] = Field(0)
-    minPerson: Optional[int] = Field(0)
-    maxPerson: Optional[int] = Field(0)
-    level: Optional[float] = Field(0.0)
+    thumbnail: str
+    genre: List[str]
+    price: int
+    during: int
+    minPerson: int
+    maxPerson: int
+    level: float
     lockingRatio: Optional[int] = Field(0)
     fear: Optional[int] = Field(0)
     openDate: Optional[str] = Field("")
     detailUrl: Optional[str] = Field("")
     reservationUrl: Optional[str] = Field("")
     status: str
+
+
+# For circular dependency
+from app.models.cafe import Cafe
+
+Theme.update_forward_refs()
