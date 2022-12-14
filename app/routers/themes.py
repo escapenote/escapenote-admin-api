@@ -71,6 +71,7 @@ async def create_theme(body: CreateThemeDto):
     """
     테마 추가
     """
+    genre = list(map(lambda x: {"id": x}, body.genre))
     theme = await prisma.theme.create(
         data={
             "cafeId": body.cafeId,
@@ -78,9 +79,7 @@ async def create_theme(body: CreateThemeDto):
             "intro": body.intro,
             "thumbnail": body.thumbnail,
             "genre": {
-                "connect": {
-                    "id": body.genre,
-                }
+                "connect": genre,
             },
             "price": body.price,
             "during": body.during,
