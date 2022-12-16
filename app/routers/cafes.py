@@ -16,6 +16,8 @@ router = APIRouter(
 @router.get("", response_model=CafeListRes)
 async def get_cafes(
     term: Optional[str] = None,
+    areaA: Optional[str] = None,
+    areaB: Optional[str] = None,
     status: Optional[str] = None,
     skip: Optional[int] = 0,
     take: Optional[int] = 20,
@@ -25,6 +27,10 @@ async def get_cafes(
     where = dict()
     if term:
         where["name"] = {"contains": term}
+    if areaA:
+        where["areaA"] = areaA
+    if areaB:
+        where["areaB"] = areaB
     if status:
         where["status"] = status
 
@@ -36,7 +42,7 @@ async def get_cafes(
         "order": {sort: order},
     }
 
-    total = await prisma.cafe.count()
+    total = await prisma.cafe.count(where=where)
     cafes = await prisma.cafe.find_many(**options)
     return {"total": total, "items": cafes}
 
