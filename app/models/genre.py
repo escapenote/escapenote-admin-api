@@ -12,6 +12,10 @@ class GenreListRes(BaseModel):
     items: List[Genre]
 
 
+class CreateGenreDto(BaseModel):
+    id: str
+
+
 # For circular dependency
 from app.models.theme import Theme
 
