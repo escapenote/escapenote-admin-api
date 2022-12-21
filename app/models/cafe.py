@@ -27,6 +27,7 @@ class CreateCafeDto(BaseModel):
     areaA: str
     areaB: str
     name: str
+    intro: Optional[str] = Field("")
     addressLine: Optional[str] = Field("")
     lat: Optional[float] = Field(0.0)
     lng: Optional[float] = Field(0.0)
@@ -41,6 +42,7 @@ class UpdateCafeDto(BaseModel):
     areaA: str
     areaB: str
     name: str
+    intro: Optional[str] = Field("")
     addressLine: Optional[str] = Field("")
     lat: Optional[float] = Field(0.0)
     lng: Optional[float] = Field(0.0)
