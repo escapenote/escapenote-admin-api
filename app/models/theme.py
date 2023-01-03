@@ -21,7 +21,7 @@ class CreateThemeDto(BaseModel):
     name: str
     intro: str
     thumbnail: str
-    genre: List[str]
+    genre: Optional[List[str]] = Field([])
     price: int
     during: int
     minPerson: int
@@ -39,7 +39,7 @@ class UpdateThemeDto(BaseModel):
     name: str
     intro: str
     thumbnail: str
-    genre: List[str]
+    genre: Optional[List[str]] = Field([])
     price: int
     during: int
     minPerson: int
