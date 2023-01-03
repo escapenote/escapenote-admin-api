@@ -29,6 +29,7 @@ class CreateThemeDto(BaseModel):
     level: float
     lockingRatio: Optional[int] = Field(0)
     fear: Optional[int] = Field(0)
+    activity: Optional[int] = Field(0)
     openDate: Optional[str] = Field("")
     detailUrl: Optional[str] = Field("")
     reservationUrl: Optional[str] = Field("")
@@ -47,6 +48,7 @@ class UpdateThemeDto(BaseModel):
     level: float
     lockingRatio: Optional[int] = Field(0)
     fear: Optional[int] = Field(0)
+    activity: Optional[int] = Field(0)
     openDate: Optional[str] = Field("")
     detailUrl: Optional[str] = Field("")
     reservationUrl: Optional[str] = Field("")
