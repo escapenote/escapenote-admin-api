@@ -1,9 +1,12 @@
 import json
+import requests
+from bs4 import BeautifulSoup
 from typing import Optional
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from app.prisma import prisma
 from app.models.cafe import CafeListRes, CafeDetailRes, CreateCafeDto, UpdateCafeDto
+from app.utils.image import upload_image
 
 
 router = APIRouter(
@@ -61,8 +64,17 @@ async def create_cafe(body: CreateCafeDto):
     """
     카페 추가
     """
+    images = list()
+    for i in range(len(body.images)):
+        if "http" in body.images[i]:
+            url = upload_image(body.images[i], "cafes")
+        else:
+            url = body.images[i]
+        images.append(url)
+
     cafe = await prisma.cafe.create(
         data={
+            "naverMapId": body.naverMapId,
             "areaA": body.areaA,
             "areaB": body.areaB,
             "name": body.name,
@@ -70,7 +82,7 @@ async def create_cafe(body: CreateCafeDto):
             "addressLine": body.addressLine,
             "lat": body.lat,
             "lng": body.lng,
-            "images": json.dumps(body.images),
+            "images": json.dumps(images),
             "website": body.website,
             "tel": body.tel,
             "openingHours": body.openingHours,
@@ -88,6 +100,7 @@ async def update_cafe(id: str, body: UpdateCafeDto):
     cafe = await prisma.cafe.update(
         where={"id": id},
         data={
+            "naverMapId": body.naverMapId,
             "areaA": body.areaA,
             "areaB": body.areaB,
             "name": body.name,
@@ -118,3 +131,109 @@ async def delete_cafe(id: str):
         where={"cafeId": id},
         data={"status": "DELETED"},
     )
+
+
+@router.get("/{naver_map_id}/cafe")
+async def get_cafe_by_naver_map_id(naver_map_id: str):
+    """
+    네이버 장소 아이디로 카페 상세 조회
+    """
+    cafe = await prisma.cafe.find_first(
+        where={"naverMapId": naver_map_id},
+    )
+    return cafe
+
+
+@router.get("/{naver_map_id}/map")
+async def get_place_info(naver_map_id: str):
+    """
+    네이버 장소 정보 가져오기
+    """
+    res = requests.get(
+        f"https://m.place.naver.com/place/{naver_map_id}/home",
+    )
+    soup = BeautifulSoup(res.content, "lxml")
+
+    try:
+        text = soup.find_all("script")[2].text
+        p1 = str(text).split("window.__APOLLO_STATE__ = ")[1]
+        p2 = p1.split("window.__LOCATION_STATE__ = ")[0]
+        p3 = p2.split("window.__PLACE_STATE__ = ")
+
+        apollo_state = p3[0].replace(";", "")
+        item = json.loads(apollo_state)
+        id = f"PlaceBase:{naver_map_id}"
+
+        name = item[id]["name"]
+        intro = item[id]["description"]
+        website = item[id]["homepages"]["repr"]["url"]
+        tel = item[id]["phone"]
+        # 휴무 일때 에러남
+        openingHoursData = item["ROOT_QUERY"][
+            'place({"deviceType":"mobile","id":'
+            + f'"{naver_map_id}"'
+            + ',"isNx":false})'
+        ]["newBusinessHours"][0]["businessHours"]
+        print("openingHoursData", openingHoursData)
+        if openingHoursData:
+            description = openingHoursData[0]["description"]
+            if "휴무" in description:
+                openingHours = [
+                    {"day": "월", "openTime": "", "closeTime": ""},
+                    {"day": "화", "openTime": "", "closeTime": ""},
+                    {"day": "수", "openTime": "", "closeTime": ""},
+                    {"day": "목", "openTime": "", "closeTime": ""},
+                    {"day": "금", "openTime": "", "closeTime": ""},
+                    {"day": "토", "openTime": "", "closeTime": ""},
+                    {"day": "일", "openTime": "", "closeTime": ""},
+                ]
+            else:
+                formattedOpeningHours = list(
+                    map(
+                        lambda x: {
+                            "day": x["day"],
+                            "openTime": x["businessHours"]["start"],
+                            "closeTime": x["businessHours"]["end"],
+                        },
+                        openingHoursData,
+                    )
+                )
+                day = formattedOpeningHours[0]["day"]
+                if "매일" in day:
+                    open_itme = formattedOpeningHours[0]["openTime"]
+                    close_itme = formattedOpeningHours[0]["closeTime"]
+                    openingHours = [
+                        {"day": "월", "openTime": open_itme, "closeTime": close_itme},
+                        {"day": "화", "openTime": open_itme, "closeTime": close_itme},
+                        {"day": "수", "openTime": open_itme, "closeTime": close_itme},
+                        {"day": "목", "openTime": open_itme, "closeTime": close_itme},
+                        {"day": "금", "openTime": open_itme, "closeTime": close_itme},
+                        {"day": "토", "openTime": open_itme, "closeTime": close_itme},
+                        {"day": "일", "openTime": open_itme, "closeTime": close_itme},
+                    ]
+                else:
+                    order = {"월": 1, "화": 2, "수": 3, "목": 4, "금": 5, "토": 6, "일": 7}
+                    openingHours = sorted(
+                        formattedOpeningHours, key=lambda d: order[d["day"]]
+                    )
+        images = list(map(lambda x: x["origin"], item[id]["images"]))
+        addressLine = item[id]["roadAddress"]
+        areaA = str(addressLine).split(" ")[0]
+        areaB = str(addressLine).split(" ")[1]
+        coordinate = item[id]["coordinate"]
+
+        return {
+            "name": name,
+            "intro": intro,
+            "website": website,
+            "tel": tel,
+            "openingHours": openingHours,
+            "images": images,
+            "areaA": areaA,
+            "areaB": areaB,
+            "addressLine": addressLine,
+            "lat": coordinate["y"],
+            "lng": coordinate["x"],
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=e)
