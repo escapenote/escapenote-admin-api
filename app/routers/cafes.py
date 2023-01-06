@@ -174,10 +174,9 @@ async def get_place_info(naver_map_id: str):
             + f'"{naver_map_id}"'
             + ',"isNx":false})'
         ]["newBusinessHours"][0]["businessHours"]
-        print("openingHoursData", openingHoursData)
         if openingHoursData:
             description = openingHoursData[0]["description"]
-            if "휴무" in description:
+            if description == "휴무":
                 openingHours = [
                     {"day": "월", "openTime": "", "closeTime": ""},
                     {"day": "화", "openTime": "", "closeTime": ""},
