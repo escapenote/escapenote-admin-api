@@ -1,7 +1,9 @@
+import boto3
 from typing import Optional
 from fastapi import APIRouter
 
 from app.prisma import prisma
+from app.config import settings
 from app.models.theme import (
     ThemeListRes,
     ThemeDetailRes,
@@ -136,12 +138,40 @@ async def update_theme(id: str, body: UpdateThemeDto):
     return theme
 
 
-@router.delete("/{id}")
-async def delete_theme(id: str):
+@router.patch("/{id}/enabled")
+async def enabled_theme(id: str):
     """
-    테마 삭제
+    테마 활성화
+    """
+    await prisma.theme.update(
+        where={"id": id},
+        data={"status": "PUBLISHED"},
+    )
+
+
+@router.patch("/{id}/disabled")
+async def disabled_theme(id: str):
+    """
+    테마 비활성화
     """
     await prisma.theme.update(
         where={"id": id},
         data={"status": "DELETED"},
     )
+
+
+@router.delete("/{id}")
+async def delete_theme(id: str):
+    """
+    테마 삭제
+    """
+    session = boto3.Session()
+    s3 = session.resource("s3")
+    bucket_name = settings.bucket_name
+    bucket = s3.Bucket(bucket_name)
+
+    # 테마 이미지 및 데이터 삭제
+    theme = await prisma.theme.find_unique(where={"id": id})
+    if theme.thumbnail:
+        bucket.delete_objects(Delete={"Objects": [{"Key": theme.thumbnail[1:]}]})
+    await prisma.theme.delete(where={"id": id})
