@@ -97,6 +97,14 @@ async def update_cafe(id: str, body: UpdateCafeDto):
     """
     카페 수정
     """
+    images = list()
+    for i in range(len(body.images)):
+        if "http" in body.images[i]:
+            url = upload_image(body.images[i], "cafes")
+        else:
+            url = body.images[i]
+        images.append(url)
+
     cafe = await prisma.cafe.update(
         where={"id": id},
         data={
@@ -108,7 +116,7 @@ async def update_cafe(id: str, body: UpdateCafeDto):
             "addressLine": body.addressLine,
             "lat": body.lat,
             "lng": body.lng,
-            "images": json.dumps(body.images),
+            "images": json.dumps(images),
             "website": body.website,
             "tel": body.tel,
             "openingHours": body.openingHours,
@@ -168,7 +176,6 @@ async def get_place_info(naver_map_id: str):
         intro = item[id]["description"]
         website = item[id]["homepages"]["repr"]["url"]
         tel = item[id]["phone"]
-        # 휴무 일때 에러남
         openingHoursData = item["ROOT_QUERY"][
             'place({"deviceType":"mobile","id":'
             + f'"{naver_map_id}"'
