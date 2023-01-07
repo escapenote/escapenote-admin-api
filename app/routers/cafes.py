@@ -1,3 +1,4 @@
+import boto3
 import json
 import requests
 from bs4 import BeautifulSoup
@@ -5,6 +6,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 
 from app.prisma import prisma
+from app.config import settings
 from app.models.cafe import CafeListRes, CafeDetailRes, CreateCafeDto, UpdateCafeDto
 from app.utils.image import upload_image
 
@@ -70,7 +72,9 @@ async def create_cafe(body: CreateCafeDto):
             url = upload_image(body.images[i], "cafes")
         else:
             url = body.images[i]
-        images.append(url)
+
+        if url:
+            images.append(url)
 
     cafe = await prisma.cafe.create(
         data={
@@ -103,7 +107,9 @@ async def update_cafe(id: str, body: UpdateCafeDto):
             url = upload_image(body.images[i], "cafes")
         else:
             url = body.images[i]
-        images.append(url)
+
+        if url:
+            images.append(url)
 
     cafe = await prisma.cafe.update(
         where={"id": id},
@@ -126,19 +132,50 @@ async def update_cafe(id: str, body: UpdateCafeDto):
     return cafe
 
 
-@router.delete("/{id}")
-async def delete_cafe(id: str):
+@router.patch("/{id}/enabled")
+async def enabled_cafe(id: str):
     """
-    카페 삭제
+    카페 활성화
+    """
+    await prisma.cafe.update(
+        where={"id": id},
+        data={"status": "PUBLISHED"},
+    )
+
+
+@router.patch("/{id}/disabled")
+async def disabled_cafe(id: str):
+    """
+    카페 비활성화
     """
     await prisma.cafe.update(
         where={"id": id},
         data={"status": "DELETED"},
     )
-    await prisma.theme.update_many(
-        where={"cafeId": id},
-        data={"status": "DELETED"},
-    )
+
+
+@router.delete("/{id}")
+async def delete_cafe(id: str):
+    """
+    카페 삭제
+    """
+    session = boto3.Session()
+    s3 = session.resource("s3")
+    bucket_name = settings.bucket_name
+    bucket = s3.Bucket(bucket_name)
+
+    # 테마 이미지 및 데이터 삭제
+    themes = await prisma.theme.find_many(where={"cafeId": id})
+    for theme in themes:
+        if theme.thumbnail:
+            bucket.delete_objects(Delete={"Objects": [{"Key": theme.thumbnail[1:]}]})
+    await prisma.theme.delete_many(where={"cafeId": id})
+
+    # 카페 이미지 및 데이터 삭제
+    cafe = await prisma.cafe.find_unique(where={"id": id})
+    for image in cafe.images:
+        bucket.delete_objects(Delete={"Objects": [{"Key": image[1:]}]})
+    await prisma.cafe.delete(where={"id": id})
 
 
 @router.get("/{naver_map_id}/cafe")

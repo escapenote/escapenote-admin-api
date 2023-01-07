@@ -3,6 +3,8 @@ import boto3
 import requests
 import mimetypes
 
+from app.config import settings
+
 
 def upload_image(image_url: str, folder_name: str):
     """
@@ -13,13 +15,13 @@ def upload_image(image_url: str, folder_name: str):
 
         session = boto3.Session()
         s3 = session.resource("s3")
-        bucket_name = "escapenote-images"
+        bucket_name = settings.bucket_name
         file_name = uuid.uuid1()
 
         content_type = r.headers["content-type"]
+        if "application" in content_type:
+            return ""
         ext = mimetypes.guess_extension(content_type).replace(".", "")
-        if "octet-stream" in ext:
-            ext = "png"
         key = f"{folder_name}/{file_name}.{ext}"
 
         bucket = s3.Bucket(bucket_name)
@@ -27,7 +29,7 @@ def upload_image(image_url: str, folder_name: str):
             r.raw,
             key,
             ExtraArgs={
-                "ContentType": f"image/{ext}",
+                "ContentType": content_type,
                 "CacheControl": "max-age=172800",
             },
         )
