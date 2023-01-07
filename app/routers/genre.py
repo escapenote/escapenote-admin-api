@@ -14,6 +14,7 @@ router = APIRouter(
 
 @router.get("", response_model=GenreListRes)
 async def get_genre_list(
+    term: Optional[str] = None,
     includeThemes: Optional[bool] = False,
     skip: Optional[int] = 0,
     take: Optional[int] = 20,
@@ -23,13 +24,20 @@ async def get_genre_list(
     """
     장르 리스트
     """
-    total = await prisma.genre.count()
-    genre_list = await prisma.genre.find_many(
-        skip=skip,
-        take=take,
-        include={"themes": includeThemes},
-        order={sort: order},
-    )
+    where = dict()
+    if term:
+        where["id"] = {"contains": term}
+
+    options = {
+        "skip": skip,
+        "take": take,
+        "where": where,
+        "include": {"themes": includeThemes},
+        "order": {sort: order},
+    }
+
+    total = await prisma.genre.count(where=where)
+    genre_list = await prisma.genre.find_many(**options)
     return {"total": total, "items": genre_list}
 
 
