@@ -213,52 +213,92 @@ async def get_place_info(naver_map_id: str):
         intro = item[id]["description"]
         website = item[id]["homepages"]["repr"]["url"]
         tel = item[id]["phone"]
-        openingHoursData = item["ROOT_QUERY"][
+        newBusinessHours = item["ROOT_QUERY"][
             'place({"deviceType":"mobile","id":'
             + f'"{naver_map_id}"'
             + ',"isNx":false})'
-        ]["newBusinessHours"][0]["businessHours"]
-        if openingHoursData:
-            description = openingHoursData[0]["description"]
-            if description == "휴무":
-                openingHours = [
-                    {"day": "월", "openTime": "", "closeTime": ""},
-                    {"day": "화", "openTime": "", "closeTime": ""},
-                    {"day": "수", "openTime": "", "closeTime": ""},
-                    {"day": "목", "openTime": "", "closeTime": ""},
-                    {"day": "금", "openTime": "", "closeTime": ""},
-                    {"day": "토", "openTime": "", "closeTime": ""},
-                    {"day": "일", "openTime": "", "closeTime": ""},
-                ]
-            else:
-                formattedOpeningHours = list(
-                    map(
-                        lambda x: {
-                            "day": x["day"],
-                            "openTime": x["businessHours"]["start"],
-                            "closeTime": x["businessHours"]["end"],
-                        },
-                        openingHoursData,
-                    )
-                )
-                day = formattedOpeningHours[0]["day"]
-                if "매일" in day:
-                    open_itme = formattedOpeningHours[0]["openTime"]
-                    close_itme = formattedOpeningHours[0]["closeTime"]
+        ]["newBusinessHours"]
+        if newBusinessHours:
+            openingHoursData = newBusinessHours[0]["businessHours"]
+            if openingHoursData:
+                description = openingHoursData[0]["description"]
+                if description == "휴무":
                     openingHours = [
-                        {"day": "월", "openTime": open_itme, "closeTime": close_itme},
-                        {"day": "화", "openTime": open_itme, "closeTime": close_itme},
-                        {"day": "수", "openTime": open_itme, "closeTime": close_itme},
-                        {"day": "목", "openTime": open_itme, "closeTime": close_itme},
-                        {"day": "금", "openTime": open_itme, "closeTime": close_itme},
-                        {"day": "토", "openTime": open_itme, "closeTime": close_itme},
-                        {"day": "일", "openTime": open_itme, "closeTime": close_itme},
+                        {"day": "월", "openTime": "", "closeTime": ""},
+                        {"day": "화", "openTime": "", "closeTime": ""},
+                        {"day": "수", "openTime": "", "closeTime": ""},
+                        {"day": "목", "openTime": "", "closeTime": ""},
+                        {"day": "금", "openTime": "", "closeTime": ""},
+                        {"day": "토", "openTime": "", "closeTime": ""},
+                        {"day": "일", "openTime": "", "closeTime": ""},
                     ]
                 else:
-                    order = {"월": 1, "화": 2, "수": 3, "목": 4, "금": 5, "토": 6, "일": 7}
-                    openingHours = sorted(
-                        formattedOpeningHours, key=lambda d: order[d["day"]]
+                    formattedOpeningHours = list(
+                        map(
+                            lambda x: {
+                                "day": x["day"],
+                                "openTime": x["businessHours"]["start"],
+                                "closeTime": x["businessHours"]["end"],
+                            },
+                            openingHoursData,
+                        )
                     )
+                    day = formattedOpeningHours[0]["day"]
+                    if "매일" in day:
+                        open_itme = formattedOpeningHours[0]["openTime"]
+                        close_itme = formattedOpeningHours[0]["closeTime"]
+                        openingHours = [
+                            {
+                                "day": "월",
+                                "openTime": open_itme,
+                                "closeTime": close_itme,
+                            },
+                            {
+                                "day": "화",
+                                "openTime": open_itme,
+                                "closeTime": close_itme,
+                            },
+                            {
+                                "day": "수",
+                                "openTime": open_itme,
+                                "closeTime": close_itme,
+                            },
+                            {
+                                "day": "목",
+                                "openTime": open_itme,
+                                "closeTime": close_itme,
+                            },
+                            {
+                                "day": "금",
+                                "openTime": open_itme,
+                                "closeTime": close_itme,
+                            },
+                            {
+                                "day": "토",
+                                "openTime": open_itme,
+                                "closeTime": close_itme,
+                            },
+                            {
+                                "day": "일",
+                                "openTime": open_itme,
+                                "closeTime": close_itme,
+                            },
+                        ]
+                    else:
+                        order = {"월": 1, "화": 2, "수": 3, "목": 4, "금": 5, "토": 6, "일": 7}
+                        openingHours = sorted(
+                            formattedOpeningHours, key=lambda d: order[d["day"]]
+                        )
+        else:
+            openingHours = [
+                {"day": "월", "openTime": "", "closeTime": ""},
+                {"day": "화", "openTime": "", "closeTime": ""},
+                {"day": "수", "openTime": "", "closeTime": ""},
+                {"day": "목", "openTime": "", "closeTime": ""},
+                {"day": "금", "openTime": "", "closeTime": ""},
+                {"day": "토", "openTime": "", "closeTime": ""},
+                {"day": "일", "openTime": "", "closeTime": ""},
+            ]
         images = list(map(lambda x: x["origin"], item[id]["images"]))
         addressLine = item[id]["roadAddress"]
         areaA = str(addressLine).split(" ")[0]
