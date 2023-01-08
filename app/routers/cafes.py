@@ -211,13 +211,19 @@ async def get_place_info(naver_map_id: str):
 
         name = item[id]["name"]
         intro = item[id]["description"]
-        website = item[id]["homepages"]["repr"]["url"]
+        homepages = item[id]["homepages"]["repr"]
+        if homepages:
+            website = homepages["url"]
+        else:
+            website = ""
         tel = item[id]["phone"]
+
         newBusinessHours = item["ROOT_QUERY"][
             'place({"deviceType":"mobile","id":'
             + f'"{naver_map_id}"'
             + ',"isNx":false})'
         ]["newBusinessHours"]
+        businessHours = item[id]["businessHours"]
         if newBusinessHours:
             openingHoursData = newBusinessHours[0]["businessHours"]
             if openingHoursData:
@@ -289,6 +295,73 @@ async def get_place_info(naver_map_id: str):
                         openingHours = sorted(
                             formattedOpeningHours, key=lambda d: order[d["day"]]
                         )
+        elif businessHours:
+            formattedOpeningHours = list(
+                map(
+                    lambda x: {
+                        "day": x["day"],
+                        "openTime": x["startTime"],
+                        "closeTime": x["endTime"],
+                    },
+                    businessHours,
+                )
+            )
+
+            openingHours = list()
+            for x in formattedOpeningHours:
+                if x["day"] == "주말":
+                    openingHours.append(
+                        {
+                            "day": "토",
+                            "openTime": x["openTime"],
+                            "closeTime": x["closeTime"],
+                        }
+                    )
+                    openingHours.append(
+                        {
+                            "day": "일",
+                            "openTime": x["openTime"],
+                            "closeTime": x["closeTime"],
+                        }
+                    )
+                elif x["day"] == "평일":
+                    openingHours.append(
+                        {
+                            "day": "월",
+                            "openTime": x["openTime"],
+                            "closeTime": x["closeTime"],
+                        }
+                    )
+                    openingHours.append(
+                        {
+                            "day": "화",
+                            "openTime": x["openTime"],
+                            "closeTime": x["closeTime"],
+                        }
+                    )
+                    openingHours.append(
+                        {
+                            "day": "수",
+                            "openTime": x["openTime"],
+                            "closeTime": x["closeTime"],
+                        }
+                    )
+                    openingHours.append(
+                        {
+                            "day": "목",
+                            "openTime": x["openTime"],
+                            "closeTime": x["closeTime"],
+                        }
+                    )
+                    openingHours.append(
+                        {
+                            "day": "금",
+                            "openTime": x["openTime"],
+                            "closeTime": x["closeTime"],
+                        }
+                    )
+            order = {"월": 1, "화": 2, "수": 3, "목": 4, "금": 5, "토": 6, "일": 7}
+            openingHours = sorted(openingHours, key=lambda d: order[d["day"]])
         else:
             openingHours = [
                 {"day": "월", "openTime": "", "closeTime": ""},
@@ -299,6 +372,7 @@ async def get_place_info(naver_map_id: str):
                 {"day": "토", "openTime": "", "closeTime": ""},
                 {"day": "일", "openTime": "", "closeTime": ""},
             ]
+
         images = list(map(lambda x: x["origin"], item[id]["images"]))
         addressLine = item[id]["roadAddress"]
         areaA = str(addressLine).split(" ")[0]
