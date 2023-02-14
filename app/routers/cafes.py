@@ -137,6 +137,10 @@ async def enabled_cafe(id: str):
     """
     카페 활성화
     """
+    await prisma.theme.update_many(
+        where={"cafeId": id},
+        data={"status": "PUBLISHED"},
+    )
     await prisma.cafe.update(
         where={"id": id},
         data={"status": "PUBLISHED"},
@@ -148,6 +152,10 @@ async def disabled_cafe(id: str):
     """
     카페 비활성화
     """
+    await prisma.theme.update_many(
+        where={"cafeId": id},
+        data={"status": "DELETED"},
+    )
     await prisma.cafe.update(
         where={"id": id},
         data={"status": "DELETED"},
