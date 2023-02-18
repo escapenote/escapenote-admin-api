@@ -78,7 +78,7 @@ async def create_theme(body: CreateThemeDto):
         data={
             "cafeId": body.cafeId,
             "name": body.name,
-            "displayname": body.displayName,
+            "displayName": body.displayName,
             "intro": body.intro,
             "thumbnail": body.thumbnail,
             "genre": {
