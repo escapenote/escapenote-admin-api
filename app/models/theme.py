@@ -19,6 +19,7 @@ class ThemeDetailRes(BaseModel):
 class CreateThemeDto(BaseModel):
     cafeId: str
     name: str
+    displayName: str
     intro: str
     thumbnail: str
     genre: Optional[List[str]] = Field([])
@@ -38,6 +39,7 @@ class CreateThemeDto(BaseModel):
 class UpdateThemeDto(BaseModel):
     cafeId: str
     name: str
+    displayName: str
     intro: str
     thumbnail: str
     genre: Optional[List[str]] = Field([])
