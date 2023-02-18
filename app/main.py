@@ -21,18 +21,13 @@ else:
     )
 
 # CORS Origins
-origins = [
-    "http://localhost:3000",
-    "https://escape-note.com",
-    "https://www.escape-note.com",
-    "https://admin.escape-note.com",
-]
+origins = ["*"]
 
 # CORS 미들웨어 설정
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

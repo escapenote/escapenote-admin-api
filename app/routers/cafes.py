@@ -56,7 +56,10 @@ async def get_cafes(
 async def get_cafe(id: str):
     cafe = await prisma.cafe.find_unique(
         where={"id": id},
-        include={"themes": True},
+        include={
+            "themes": True,
+            "scrapper": True,
+        },
     )
     return cafe
 
