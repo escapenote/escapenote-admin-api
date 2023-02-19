@@ -7,15 +7,6 @@ class Scrapper(models.Scrapper, warn_subclass=False):
     cafe: Optional["Cafe"]
 
 
-class ScrapperListRes(BaseModel):
-    total: int
-    items: List[Scrapper]
-
-
-class ScrapperDetailRes(BaseModel):
-    __root__: Scrapper
-
-
 class CreateScrapperDto(BaseModel):
     url: str
     groupSelector: Optional[str] = Field("")

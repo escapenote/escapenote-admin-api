@@ -1,3 +1,4 @@
+import json
 import requests
 from bs4 import BeautifulSoup
 from typing import Optional
@@ -7,8 +8,6 @@ from fastapi import APIRouter, Depends
 from app.dependencies import pass_access_user
 from app.prisma import prisma
 from app.models.scrapper import (
-    ScrapperListRes,
-    ScrapperDetailRes,
     CreateScrapperDto,
     UpdateScrapperDto,
 )
@@ -21,9 +20,7 @@ router = APIRouter(
 )
 
 
-@router.get(
-    "", response_model=ScrapperListRes, dependencies=[Depends(pass_access_user)]
-)
+@router.get("", dependencies=[Depends(pass_access_user)])
 async def get_scrapper_list(
     status: Optional[str] = None,
     skip: Optional[int] = 0,
@@ -51,16 +48,17 @@ async def get_scrapper_list(
     return {"total": total, "items": scrapper_list}
 
 
-@router.get(
-    "/{id}", response_model=ScrapperDetailRes, dependencies=[Depends(pass_access_user)]
-)
+@router.get("/{id}", dependencies=[Depends(pass_access_user)])
 async def get_scrapper(id: str):
     """
     스크래퍼 상세 조회
     """
     scrapper = await prisma.scrapper.find_unique(
         where={"id": id},
-        include={"cafe": True},
+        include={
+            "cafe": True,
+            "metric": True,
+        },
     )
     return scrapper
 
@@ -136,7 +134,7 @@ async def delete_scrapper(id: str):
 
 
 @router.get("/{id}/scrap", dependencies=[Depends(pass_access_user)])
-async def get_scrapper(id: str, cafeId: str, themeSelector: str):
+async def get_scrapper(id: str):
     """
     스크래퍼 데이터를 이용하여 스크랩 시도
     """
@@ -147,13 +145,38 @@ async def get_scrapper(id: str, cafeId: str, themeSelector: str):
     res = requests.get(scrapper.url)
     soup = BeautifulSoup(res.content, "lxml")
 
-    scrapped_title_els = soup.select(themeSelector)
-    scrapped_titles = list(map(lambda e: str(e.text).strip(), scrapped_title_els))
+    scrapped_theme_els = soup.select(scrapper.themeSelector)
+    scrapped_theme_names = list(map(lambda e: str(e.text).strip(), scrapped_theme_els))
+    scrapped_theme_names.sort()
 
-    themes = await prisma.theme.find_many(where={"cafeId": cafeId})
-    current_titles = list(map(lambda x: x.name, themes))
+    themes = await prisma.theme.find_many(where={"cafeId": scrapper.cafeId})
+    current_theme_names = list(map(lambda x: x.name, themes))
+    current_theme_names.sort()
 
-    return {
-        "currentTitles": current_titles,
-        "scrappedTitles": scrapped_titles,
+    different_theme_names = list()
+    for current_theme_name in current_theme_names:
+        if current_theme_name not in scrapped_theme_names:
+            different_theme_names.append(current_theme_name)
+    for scrapped_theme_name in scrapped_theme_names:
+        if scrapped_theme_name not in current_theme_names:
+            different_theme_names.append(scrapped_theme_name)
+    different_theme_names = list(set(different_theme_names))
+    different_theme_names.sort()
+
+    data = {
+        "scrapper": {"connect": {"id": id}},
+        "currentThemes": json.dumps(current_theme_names),
+        "scrappedThemes": json.dumps(scrapped_theme_names),
+        "differentThemes": json.dumps(different_theme_names),
+        "status": "SOMETHING_WRONG" if different_theme_names else "NOTHING_WRONG",
     }
+
+    if scrapper.metric:
+        await prisma.metric.update(
+            where={"id": scrapper.metric.id},
+            data=data,
+        )
+    else:
+        await prisma.metric.create(
+            data=data,
+        )
