@@ -140,6 +140,7 @@ async def get_scrapper(id: str):
     """
     scrapper = await prisma.scrapper.find_unique(
         where={"id": id},
+        include={"metric": True},
     )
 
     res = requests.get(scrapper.url)
