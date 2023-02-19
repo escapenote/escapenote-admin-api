@@ -20,6 +20,8 @@ router = APIRouter(
 
 @router.get("", response_model=CafeListRes)
 async def get_cafes(
+    isNotScrapper: Optional[bool] = None,
+    cafeId: Optional[str] = None,
     term: Optional[str] = None,
     areaA: Optional[str] = None,
     areaB: Optional[str] = None,
@@ -30,14 +32,27 @@ async def get_cafes(
     order: Optional[str] = "desc",
 ):
     where = dict()
+
+    filter_a = dict()
+    if isNotScrapper:
+        filter_a["scrapper"] = {"is": None}
     if term:
-        where["name"] = {"contains": term}
+        filter_a["name"] = {"contains": term}
     if areaA:
-        where["areaA"] = areaA
+        filter_a["areaA"] = areaA
     if areaB:
-        where["areaB"] = areaB
+        filter_a["areaB"] = areaB
     if status:
-        where["status"] = status
+        filter_a["status"] = status
+
+    filter_b = dict()
+    if cafeId:
+        filter_b["id"] = cafeId
+
+    if filter_b.values():
+        where = {"OR": [filter_a, filter_b]}
+    else:
+        where = filter_a
 
     options = {
         "skip": skip,
