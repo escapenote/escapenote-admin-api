@@ -48,6 +48,18 @@ async def get_metrics(
     return {"total": total, "items": metrics}
 
 
+@router.get("/{id}")
+async def get_metric(id: str):
+    """
+    메트릭 상세 조회
+    """
+    metric = await prisma.metric.find_unique(
+        where={"id": id},
+        include={"scrapper": True},
+    )
+    return metric
+
+
 @router.post("")
 async def post_metric():
     """
