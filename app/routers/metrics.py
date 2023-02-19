@@ -73,7 +73,13 @@ async def post_metric():
 
     for scrapper in scrappers:
         res = requests.get(scrapper.url)
-        soup = BeautifulSoup(res.content, "lxml")
+        content_type = res.headers["content-type"]
+        if not "charset" in content_type:
+            if res.apparent_encoding not in ["utf-8", "UTF-8", "euc-kr", "EUC-KR"]:
+                res.encoding = "utf-8"
+            else:
+                res.encoding = res.apparent_encoding
+        soup = BeautifulSoup(res.text, "lxml")
 
         scrapped_theme_els = soup.select(scrapper.themeSelector)
         scrapped_theme_names = list(
