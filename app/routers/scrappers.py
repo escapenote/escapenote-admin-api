@@ -202,5 +202,3 @@ async def get_scrapper(id: str):
         await prisma.metric.create(
             data=data,
         )
-
-    driver.close()
