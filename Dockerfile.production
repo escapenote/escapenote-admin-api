@@ -21,12 +21,11 @@ RUN wget -q https://chromedriver.storage.googleapis.com/106.0.5249.61/chromedriv
 RUN unzip chromedriver_linux64.zip 
 RUN rm chromedriver_linux64.zip
 
-RUN mv ./chromedriver ./app/chromedriver
-
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
 COPY ./prisma /code/prisma
 COPY ./app /code/app
+RUN mv ./chromedriver /code/app/chromedriver
 
 RUN prisma generate
 
