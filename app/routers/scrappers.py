@@ -1,10 +1,13 @@
 import json
-import requests
-from lxml import html
-from bs4 import BeautifulSoup
 from typing import Optional
 from fastapi import APIRouter
 from fastapi import APIRouter, Depends
+
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.expected_conditions import presence_of_element_located
 
 from app.dependencies import pass_access_user
 from app.prisma import prisma
@@ -144,23 +147,28 @@ async def get_scrapper(id: str):
         include={"metric": True},
     )
 
-    res = requests.get(scrapper.url)
-    content_type = res.headers["content-type"]
-    if not "charset" in content_type:
-        if res.apparent_encoding not in ["utf-8", "UTF-8", "euc-kr", "EUC-KR"]:
-            res.encoding = "utf-8"
-        else:
-            res.encoding = res.apparent_encoding
+    options = webdriver.ChromeOptions()
+    options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
 
+    driver = webdriver.Chrome(service=Service("app/chromedriver"), options=options)
+    driver.get(scrapper.url)
+    wait = WebDriverWait(driver, 10)
+
+    # XPath
     if scrapper.themeSelector and scrapper.themeSelector[0] == "/":
-        tree = html.fromstring(res.text)
-        scrapped_theme_names = tree.xpath(f"{scrapper.themeSelector}/text()")
+        wait.until(presence_of_element_located((By.XPATH, scrapper.themeSelector)))
+        scrapped_theme_els = driver.find_elements(By.XPATH, scrapper.themeSelector)
+    # CSS
     else:
-        soup = BeautifulSoup(res.text, "lxml")
-        scrapped_theme_els = soup.select(scrapper.themeSelector)
-        scrapped_theme_names = list(
-            map(lambda e: str(e.text).strip(), scrapped_theme_els)
+        wait.until(
+            presence_of_element_located((By.CSS_SELECTOR, scrapper.themeSelector))
         )
+        scrapped_theme_els = driver.find_elements(
+            By.CSS_SELECTOR, scrapper.themeSelector
+        )
+    scrapped_theme_names = list(map(lambda e: str(e.text).strip(), scrapped_theme_els))
     scrapped_theme_names.sort()
 
     themes = await prisma.theme.find_many(where={"cafeId": scrapper.cafeId})
@@ -194,3 +202,5 @@ async def get_scrapper(id: str):
         await prisma.metric.create(
             data=data,
         )
+
+    driver.close()

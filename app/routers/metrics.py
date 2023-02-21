@@ -4,6 +4,12 @@ from bs4 import BeautifulSoup
 from typing import Optional
 from fastapi import APIRouter
 
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.expected_conditions import presence_of_element_located
+
 from app.prisma import prisma
 
 
@@ -71,17 +77,29 @@ async def post_metric():
 
     result = list()
 
-    for scrapper in scrappers:
-        res = requests.get(scrapper.url)
-        content_type = res.headers["content-type"]
-        if not "charset" in content_type:
-            if res.apparent_encoding not in ["utf-8", "UTF-8", "euc-kr", "EUC-KR"]:
-                res.encoding = "utf-8"
-            else:
-                res.encoding = res.apparent_encoding
-        soup = BeautifulSoup(res.text, "lxml")
+    options = webdriver.ChromeOptions()
+    options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
 
-        scrapped_theme_els = soup.select(scrapper.themeSelector)
+    driver = webdriver.Chrome(service=Service("app/chromedriver"), options=options)
+    wait = WebDriverWait(driver, 10)
+
+    for scrapper in scrappers:
+        driver.get(scrapper.url)
+
+        # XPath
+        if scrapper.themeSelector and scrapper.themeSelector[0] == "/":
+            wait.until(presence_of_element_located((By.XPATH, scrapper.themeSelector)))
+            scrapped_theme_els = driver.find_elements(By.XPATH, scrapper.themeSelector)
+        # CSS
+        else:
+            wait.until(
+                presence_of_element_located((By.CSS_SELECTOR, scrapper.themeSelector))
+            )
+            scrapped_theme_els = driver.find_elements(
+                By.CSS_SELECTOR, scrapper.themeSelector
+            )
         scrapped_theme_names = list(
             map(lambda e: str(e.text).strip(), scrapped_theme_els)
         )
@@ -112,6 +130,8 @@ async def post_metric():
                 else "NOTHING_WRONG",
             }
         )
+
+    driver.close()
 
     await prisma.metric.delete_many()
     await prisma.metric.create_many(data=result)
