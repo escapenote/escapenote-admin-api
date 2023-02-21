@@ -1,5 +1,6 @@
 import json
 import requests
+from lxml import html
 from bs4 import BeautifulSoup
 from typing import Optional
 from fastapi import APIRouter
@@ -150,10 +151,16 @@ async def get_scrapper(id: str):
             res.encoding = "utf-8"
         else:
             res.encoding = res.apparent_encoding
-    soup = BeautifulSoup(res.text, "lxml")
 
-    scrapped_theme_els = soup.select(scrapper.themeSelector)
-    scrapped_theme_names = list(map(lambda e: str(e.text).strip(), scrapped_theme_els))
+    if scrapper.themeSelector and scrapper.themeSelector[0] == "/":
+        tree = html.fromstring(res.text)
+        scrapped_theme_names = tree.xpath(f"{scrapper.themeSelector}/text()")
+    else:
+        soup = BeautifulSoup(res.text, "lxml")
+        scrapped_theme_els = soup.select(scrapper.themeSelector)
+        scrapped_theme_names = list(
+            map(lambda e: str(e.text).strip(), scrapped_theme_els)
+        )
     scrapped_theme_names.sort()
 
     themes = await prisma.theme.find_many(where={"cafeId": scrapper.cafeId})
