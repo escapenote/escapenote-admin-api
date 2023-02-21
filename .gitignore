@@ -12,3 +12,4 @@ venv/
 .env.local
 
 __pycache__
+chromedriver
