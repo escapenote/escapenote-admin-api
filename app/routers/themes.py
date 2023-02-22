@@ -36,7 +36,7 @@ async def get_themes(
     if cafeId:
         where["cafeId"] = cafeId
     if term:
-        where["name"] = {"contains": term}
+        where["displayName"] = {"contains": term}
     if status:
         where["status"] = status
 
