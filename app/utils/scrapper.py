@@ -38,7 +38,7 @@ async def scrap_all_themes(scrappers: List[Scrapper]):
                 By.CSS_SELECTOR, scrapper.themeSelector
             )
         scrapped_theme_names = list(
-            map(lambda e: str(e.text).strip(), scrapped_theme_els)
+            map(lambda e: str(e.text).replace("\n", " ").strip(), scrapped_theme_els)
         )
         scrapped_theme_names.sort()
 

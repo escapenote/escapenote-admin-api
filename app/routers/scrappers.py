@@ -168,7 +168,9 @@ async def get_scrapper(id: str):
         scrapped_theme_els = driver.find_elements(
             By.CSS_SELECTOR, scrapper.themeSelector
         )
-    scrapped_theme_names = list(map(lambda e: str(e.text).strip(), scrapped_theme_els))
+    scrapped_theme_names = list(
+        map(lambda e: str(e.text).replace("\n", " ").strip(), scrapped_theme_els)
+    )
     scrapped_theme_names.sort()
 
     themes = await prisma.theme.find_many(where={"cafeId": scrapper.cafeId})
