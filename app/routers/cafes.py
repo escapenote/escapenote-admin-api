@@ -265,15 +265,23 @@ async def get_place_info(naver_map_id: str):
                         {"day": "일", "openTime": "", "closeTime": ""},
                     ]
                 else:
-                    formattedOpeningHours = list(
-                        map(
-                            lambda x: {
+
+                    def formattedOpeningHour(x):
+                        if x["businessHours"]:
+                            return {
                                 "day": x["day"],
                                 "openTime": x["businessHours"]["start"],
                                 "closeTime": x["businessHours"]["end"],
-                            },
-                            openingHoursData,
-                        )
+                            }
+                        else:
+                            return {
+                                "day": x["day"],
+                                "openTime": "",
+                                "closeTime": "",
+                            }
+
+                    formattedOpeningHours = list(
+                        map(formattedOpeningHour, openingHoursData)
                     )
                     day = formattedOpeningHours[0]["day"]
                     if "매일" in day:
