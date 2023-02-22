@@ -22,6 +22,7 @@ router = APIRouter(
 @router.get("", response_model=ThemeListRes)
 async def get_themes(
     cafeId: Optional[str] = None,
+    genre: Optional[str] = None,
     term: Optional[str] = None,
     status: Optional[str] = None,
     skip: Optional[int] = 0,
@@ -35,6 +36,8 @@ async def get_themes(
     where = dict()
     if cafeId:
         where["cafeId"] = cafeId
+    if genre:
+        where["genre"] = {"some": {"id": genre}}
     if term:
         where["displayName"] = {"contains": term}
     if status:
