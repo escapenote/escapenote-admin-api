@@ -26,7 +26,7 @@ class CafeDetailRes(BaseModel):
 class CreateCafeDto(BaseModel):
     naverMapId: Optional[str] = Field("")
     areaA: str
-    areaB: str
+    areaB: Optional[str] = Field("")
     name: str
     intro: Optional[str] = Field("")
     addressLine: Optional[str] = Field("")
@@ -42,7 +42,7 @@ class CreateCafeDto(BaseModel):
 class UpdateCafeDto(BaseModel):
     naverMapId: Optional[str] = Field("")
     areaA: str
-    areaB: str
+    areaB: Optional[str] = Field("")
     name: str
     intro: Optional[str] = Field("")
     addressLine: Optional[str] = Field("")
