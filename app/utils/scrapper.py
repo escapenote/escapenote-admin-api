@@ -1,7 +1,9 @@
 import json
+from time import sleep
 from typing import List
 
 from selenium import webdriver
+from selenium.webdriver import Keys
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -23,7 +25,21 @@ async def scrap_all_themes(scrappers: List[Scrapper]):
     wait = WebDriverWait(driver, 10)
 
     for scrapper in scrappers:
-        driver.get(scrapper.url)
+        try:
+            driver.get(scrapper.url)
+            wait.until(presence_of_element_located((By.TAG_NAME, "body")))
+            wait.until(
+                lambda driver: driver.execute_script("return document.readyState")
+                == "complete"
+            )
+            sleep(1)
+
+            body = driver.find_element(By.TAG_NAME, "body")
+            body.send_keys(Keys.END)
+            sleep(1)
+        except Exception as e:
+            print("[error]", e)
+            continue
 
         # XPath
         if scrapper.themeSelector and scrapper.themeSelector[0] == "/":
